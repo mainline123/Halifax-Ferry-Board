@@ -1,0 +1,24 @@
+{
+  "halifax_alderney": [
+    "6:45 PM",
+    "7:00 PM",
+    "7:15 PM"
+  ],
+  "alderney_halifax": [
+    "6:45 PM",
+    "7:00 PM",
+    "7:15 PM"
+  ],
+  "halifax_woodside": [
+    "6:52 PM",
+    "7:22 PM",
+    "7:52 PM"
+  ],
+  "woodside_halifax": [
+    "7:07 PM",
+    "7:37 PM",
+    "8:07 PM"
+  ],
+  "updated": "6:40 PM",
+  "source": "Halifax Transit GTFS"
+}
