@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -136,12 +137,14 @@ html, body {
     color: #082743;
     padding: .8vh 1.2vw;
     border-radius: .55vw;
+    white-space: nowrap;
 }
 
 .following {
     font-size: 1.55vw;
     font-weight: 600;
     opacity: .9;
+    white-space: nowrap;
 }
 
 /* FOOTER */
@@ -254,7 +257,6 @@ html, body {
 
         </section>
 
-
         <!-- WOODSIDE -->
 
         <section class="route-card">
@@ -300,16 +302,15 @@ html, body {
 
     </main>
 
-
     <footer class="footer">
 
         <div class="live">
             <span class="dot"></span>
-            HALIFAX TRANSIT
+            HALIFAX TRANSIT SCHEDULE
         </div>
 
         <div class="alert" id="alert">
-            ⛴ Check service alerts before travelling
+            ⛴ Scheduled times — check service alerts before travelling
         </div>
 
         <div class="updated">
@@ -320,7 +321,6 @@ html, body {
     </footer>
 
 </div>
-
 
 <script>
 
@@ -345,30 +345,94 @@ function updateClock() {
 
     document.getElementById("clock").textContent = time;
     document.getElementById("date").textContent = date;
-
 }
 
 updateClock();
-
 setInterval(updateClock, 1000);
 
 
-/* UPDATE DISPLAY TIME */
+/* POPULATE ONE FERRY DIRECTION */
 
-function updateRefreshTime() {
+function displayDepartures(times, firstId, followingId) {
 
-    const now = new Date();
+    const first = document.getElementById(firstId);
+    const following = document.getElementById(followingId);
 
-    document.getElementById("updated").textContent =
-        now.toLocaleTimeString("en-CA", {
-            timeZone: "America/Halifax",
-            hour: "numeric",
-            minute: "2-digit"
-        });
+    const departures = Array.isArray(times) ? times : [];
 
+    first.textContent = departures[0] || "—";
+
+    following.textContent = departures.length > 1
+        ? departures.slice(1, 3).join("  •  ")
+        : "No further departures";
+
+    first.classList.remove("loading");
+    following.classList.remove("loading");
 }
 
-updateRefreshTime();
+
+/* LOAD SCHEDULE FROM GITHUB */
+
+async function loadFerryData() {
+
+    try {
+
+        const response = await fetch(
+            "ferries.json?t=" + Date.now(),
+            { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+            throw new Error("Unable to load ferry schedule");
+        }
+
+        const data = await response.json();
+
+        displayDepartures(
+            data.halifax_alderney,
+            "ha1",
+            "ha2"
+        );
+
+        displayDepartures(
+            data.alderney_halifax,
+            "ah1",
+            "ah2"
+        );
+
+        displayDepartures(
+            data.halifax_woodside,
+            "hw1",
+            "hw2"
+        );
+
+        displayDepartures(
+            data.woodside_halifax,
+            "wh1",
+            "wh2"
+        );
+
+        document.getElementById("updated").textContent =
+            data.updated || "--:--";
+
+        document.getElementById("alert").textContent =
+            "⛴ Scheduled departures — check Halifax Transit for service alerts";
+
+    } catch (error) {
+
+        console.error("Ferry data error:", error);
+
+        document.getElementById("alert").textContent =
+            "⚠ Ferry schedule temporarily unavailable";
+    }
+}
+
+
+/* AUTOMATIC REFRESH */
+
+loadFerryData();
+
+setInterval(loadFerryData, 60000);
 
 </script>
 
