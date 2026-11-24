@@ -1,3 +1,4 @@
+
 import csv
 import io
 import json
@@ -79,7 +80,7 @@ def active_service_ids(calendar_rows, calendar_dates_rows, today):
 
 
 def main():
-    now = datetime.now(HALIFAX)
+    now = datetime.now(HALIFAX_TZ)
     today = now.date()
 
     data = download_gtfs()
@@ -102,7 +103,6 @@ def main():
             else []
         )
 
-    # Identify actual route IDs using route_short_name.
     ferry_route_ids = {}
 
     for route in routes:
@@ -133,7 +133,6 @@ def main():
         elif route_id == ferry_route_ids.get(WOODSIDE_ROUTE):
             ferry_trips[trip["trip_id"]] = WOODSIDE_ROUTE
 
-    # Collect stop times for ferry trips.
     trip_stops = {}
 
     for row in stop_times:
@@ -159,7 +158,6 @@ def main():
 
         stop_ids = [s["stop_id"] for s in stops]
 
-        # ALDERNEY
         if route == ALDERNEY_ROUTE:
 
             if HALIFAX in stop_ids and ALDERNEY in stop_ids:
@@ -182,7 +180,6 @@ def main():
                 if departure_time >= now:
                     departures[key].append(departure_time)
 
-        # WOODSIDE
         elif route == WOODSIDE_ROUTE:
 
             if HALIFAX in stop_ids and WOODSIDE in stop_ids:
@@ -205,7 +202,6 @@ def main():
                 if departure_time >= now:
                     departures[key].append(departure_time)
 
-    # Sort and keep next three.
     output = {}
 
     for key, times in departures.items():
