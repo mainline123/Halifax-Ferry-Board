@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Halifax Harbour Ferries</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #071d32;
+    color: white;
+}
+
+.board {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background:
+        linear-gradient(180deg, #07365c 0%, #071d32 55%, #041421 100%);
+}
+
+/* HEADER */
+
+.header {
+    height: 18vh;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4vw;
+    border-bottom: 3px solid rgba(255,255,255,.18);
+}
+
+.title-area {
+    display: flex;
+    align-items: center;
+    gap: 1.5vw;
+}
+
+.ferry-icon {
+    font-size: 5vw;
+}
+
+.title {
+    font-size: 3.2vw;
+    font-weight: 800;
+    letter-spacing: .08em;
+}
+
+.subtitle {
+    margin-top: .4vh;
+    font-size: 1.25vw;
+    opacity: .8;
+    letter-spacing: .12em;
+}
+
+.clock {
+    text-align: right;
+}
+
+.time {
+    font-size: 3vw;
+    font-weight: 700;
+}
+
+.date {
+    font-size: 1.15vw;
+    opacity: .75;
+}
+
+/* ROUTES */
+
+.routes {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2vw;
+    padding: 2.5vh 3vw;
+}
+
+.route-card {
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 1.2vw;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.route-header {
+    padding: 2vh 2vw;
+    background: rgba(0,0,0,.18);
+}
+
+.route-name {
+    font-size: 2.2vw;
+    font-weight: 800;
+}
+
+.route-description {
+    font-size: 1.05vw;
+    margin-top: .5vh;
+    opacity: .7;
+}
+
+.direction {
+    padding: 1.7vh 2vw;
+    border-top: 1px solid rgba(255,255,255,.1);
+}
+
+.direction-title {
+    font-size: 1.25vw;
+    font-weight: 700;
+    margin-bottom: 1vh;
+}
+
+.departures {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+}
+
+.next {
+    font-size: 2.6vw;
+    font-weight: 800;
+    background: white;
+    color: #082743;
+    padding: .8vh 1.2vw;
+    border-radius: .55vw;
+}
+
+.following {
+    font-size: 1.55vw;
+    font-weight: 600;
+    opacity: .9;
+}
+
+/* FOOTER */
+
+.footer {
+    height: 11vh;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    align-items: center;
+    padding: 0 3vw;
+    background: rgba(0,0,0,.25);
+    border-top: 2px solid rgba(255,255,255,.12);
+}
+
+.live {
+    font-size: 1.15vw;
+    font-weight: 700;
+}
+
+.dot {
+    display: inline-block;
+    width: .8vw;
+    height: .8vw;
+    background: #41df7c;
+    border-radius: 50%;
+    margin-right: .5vw;
+}
+
+.alert {
+    text-align: center;
+    font-size: 1.1vw;
+}
+
+.updated {
+    text-align: right;
+    font-size: 1vw;
+    opacity: .75;
+}
+
+.loading {
+    opacity: .65;
+}
+</style>
+</head>
+
+<body>
+
+<div class="board">
+
+    <header class="header">
+
+        <div class="title-area">
+            <div class="ferry-icon">⛴️</div>
+
+            <div>
+                <div class="title">HALIFAX HARBOUR FERRIES</div>
+                <div class="subtitle">FERRY DEPARTURE INFORMATION</div>
+            </div>
+        </div>
+
+        <div class="clock">
+            <div class="time" id="clock">--:--</div>
+            <div class="date" id="date">Loading...</div>
+        </div>
+
+    </header>
+
+    <main class="routes">
+
+        <!-- ALDERNEY -->
+
+        <section class="route-card">
+
+            <div class="route-header">
+                <div class="route-name">ALDERNEY FERRY</div>
+                <div class="route-description">
+                    Downtown Halifax ↔ Downtown Dartmouth
+                </div>
+            </div>
+
+            <div class="direction">
+
+                <div class="direction-title">
+                    HALIFAX → ALDERNEY LANDING
+                </div>
+
+                <div class="departures">
+                    <div class="next loading" id="ha1">--:--</div>
+                    <div class="following loading" id="ha2">
+                        --:-- &nbsp; • &nbsp; --:--
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="direction">
+
+                <div class="direction-title">
+                    ALDERNEY LANDING → HALIFAX
+                </div>
+
+                <div class="departures">
+                    <div class="next loading" id="ah1">--:--</div>
+                    <div class="following loading" id="ah2">
+                        --:-- &nbsp; • &nbsp; --:--
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- WOODSIDE -->
+
+        <section class="route-card">
+
+            <div class="route-header">
+                <div class="route-name">WOODSIDE FERRY</div>
+                <div class="route-description">
+                    Downtown Halifax ↔ Woodside
+                </div>
+            </div>
+
+            <div class="direction">
+
+                <div class="direction-title">
+                    HALIFAX → WOODSIDE
+                </div>
+
+                <div class="departures">
+                    <div class="next loading" id="hw1">--:--</div>
+                    <div class="following loading" id="hw2">
+                        --:-- &nbsp; • &nbsp; --:--
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="direction">
+
+                <div class="direction-title">
+                    WOODSIDE → HALIFAX
+                </div>
+
+                <div class="departures">
+                    <div class="next loading" id="wh1">--:--</div>
+                    <div class="following loading" id="wh2">
+                        --:-- &nbsp; • &nbsp; --:--
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+
+        <div class="live">
+            <span class="dot"></span>
+            HALIFAX TRANSIT
+        </div>
+
+        <div class="alert" id="alert">
+            ⛴ Check service alerts before travelling
+        </div>
+
+        <div class="updated">
+            LAST UPDATED:
+            <span id="updated">--:--</span>
+        </div>
+
+    </footer>
+
+</div>
+
+
+<script>
+
+/* HALIFAX CLOCK */
+
+function updateClock() {
+
+    const now = new Date();
+
+    const time = now.toLocaleTimeString("en-CA", {
+        timeZone: "America/Halifax",
+        hour: "numeric",
+        minute: "2-digit"
+    });
+
+    const date = now.toLocaleDateString("en-CA", {
+        timeZone: "America/Halifax",
+        weekday: "long",
+        month: "long",
+        day: "numeric"
+    });
+
+    document.getElementById("clock").textContent = time;
+    document.getElementById("date").textContent = date;
+
+}
+
+updateClock();
+
+setInterval(updateClock, 1000);
+
+
+/* UPDATE DISPLAY TIME */
+
+function updateRefreshTime() {
+
+    const now = new Date();
+
+    document.getElementById("updated").textContent =
+        now.toLocaleTimeString("en-CA", {
+            timeZone: "America/Halifax",
+            hour: "numeric",
+            minute: "2-digit"
+        });
+
+}
+
+updateRefreshTime();
+
+</script>
+
+</body>
+</html>
