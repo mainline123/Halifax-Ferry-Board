@@ -1,0 +1,24 @@
+
+name: Test Halifax Ferry GPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-gps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install GPS library
+        run: pip install gtfs-realtime-bindings
+
+      - name: Test ferry GPS positions
+        run: python update-ferry-gps.py
