@@ -3,225 +3,385 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Halifax Harbour Ferries</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Halifax Harbour Ferry Board</title>
 <style>
 *{box-sizing:border-box}
 html,body{
- margin:0;width:100%;height:100%;overflow:hidden;
+ margin:0;width:100%;height:100%;
+ overflow:hidden;
  font-family:Arial,Helvetica,sans-serif;
- background:#071d32;color:white
+ background:#061c30;color:white;
 }
 .board{
- width:100vw;height:100vh;display:flex;flex-direction:column;
- background:linear-gradient(180deg,#07365c,#071d32 55%,#041421)
+ width:100vw;height:100dvh;
+ display:flex;flex-direction:column;
+ padding:1.4vh 3vw;
+ gap:1vh;
+ background:linear-gradient(180deg,#074875,#082c4a 45%,#041421);
 }
 .header{
- height:15vh;flex-shrink:0;display:flex;align-items:center;
- justify-content:space-between;padding:0 3vw;
- border-bottom:2px solid #ffffff30
+ flex:0 0 9%;
+ display:flex;align-items:center;
+ justify-content:space-between;
+ border-bottom:2px solid #ffffff40;
 }
-.title-area{display:flex;align-items:center;gap:1.2vw}
-.ferry-icon{font-size:4vw}
-.title{font-size:2.7vw;font-weight:800;letter-spacing:.06em}
-.subtitle{font-size:1.05vw;opacity:.8;margin-top:.5vh}
+.heading{font-size:clamp(18px,4.5vw,42px);font-weight:900}
+.subtitle{font-size:clamp(10px,2vw,18px);color:#c5e3f6;margin-top:.5vh}
 .clock{text-align:right}
-.time{font-size:2.6vw;font-weight:700}
-.date{font-size:1vw;opacity:.8}
-.content{
- flex:1;min-height:0;display:grid;
- grid-template-columns:1.05fr .95fr;
- gap:1.5vw;padding:2vh 2.5vw
+.time{font-size:clamp(18px,4vw,38px);font-weight:800}
+.date{font-size:clamp(9px,1.7vw,16px);color:#c5e3f6}
+
+.map-section{
+ flex:0 0 22%;min-height:0;
+ border:2px solid #ffffff35;
+ border-radius:12px;overflow:hidden;
+ display:flex;flex-direction:column;
 }
-.left,.right{min-height:0;display:flex;flex-direction:column;gap:1.5vh}
-.panel{
- background:#ffffff10;border:1px solid #ffffff30;
- border-radius:1vw;overflow:hidden
+.section-title{
+ background:#03192d;
+ padding:.65vh 2vw;
+ font-size:clamp(14px,2.7vw,25px);
+ font-weight:900;
+ letter-spacing:.03em;
 }
-.panel-heading{
- padding:1.1vh 1.3vw;background:#00000030;
- font-size:1.5vw;font-weight:800
+.map{
+ flex:1;min-height:0;position:relative;
+ background:#174563;
 }
-.map-panel{flex:1;display:flex;flex-direction:column;min-height:0}
-.map-wrap{flex:1;position:relative;min-height:0;background:#123e5d}
-.map-wrap img{
- width:100%;height:100%;object-fit:cover;object-position:center
+.map img{
+ width:100%;height:100%;
+ object-fit:contain;
 }
-.map-label{
- position:absolute;bottom:1vh;left:1vw;
- background:#061b2be0;border-radius:.4vw;
- padding:.6vh .7vw;font-size:.85vw
+.map-note{
+ position:absolute;bottom:5px;left:7px;
+ background:#041a2de8;
+ padding:5px 8px;
+ border-radius:5px;
+ font-size:clamp(9px,1.5vw,14px);
 }
-.photo-panel{height:29%;display:flex;min-height:0}
-.photo-panel img{width:43%;height:100%;object-fit:cover}
-.photo-caption{
- flex:1;padding:1.4vh 1.2vw;
- display:flex;flex-direction:column;justify-content:center;gap:1vh
+
+.schedules{
+ flex:1;min-height:0;
+ display:grid;
+ grid-template-rows:1fr 1fr;
+ gap:1vh;
 }
-.photo-caption strong{font-size:1.55vw}
-.photo-caption span{font-size:1.05vw;line-height:1.4;opacity:.85}
-.route-panel{flex:1;display:flex;flex-direction:column}
-.route-subtitle{
- padding:.7vh 1.3vw;font-size:.9vw;opacity:.7
+.route{
+ min-height:0;
+ display:flex;flex-direction:column;
+ border:2px solid #4a7896;
+ border-radius:12px;
+ overflow:hidden;
+ background:#103b5c;
+}
+.route-heading{
+ background:#06253f;
+ padding:.7vh 2vw;
+ font-size:clamp(16px,3.1vw,30px);
+ font-weight:900;
 }
 .direction{
- flex:1;padding:1.2vh 1.3vw;
- border-top:1px solid #ffffff20;
- display:flex;flex-direction:column;justify-content:center
+ flex:1;min-height:0;
+ padding:.7vh 2vw;
+ border-top:1px solid #ffffff35;
+ display:flex;flex-direction:column;
+ justify-content:center;
+ gap:.5vh;
 }
-.direction-title{font-size:1.12vw;font-weight:700;margin-bottom:1vh}
-.departures{display:flex;align-items:center;gap:1vw}
+.direction-name{
+ font-size:clamp(13px,2.7vw,25px);
+ font-weight:800;
+}
+.times{
+ display:flex;align-items:center;
+ gap:1.8vw;min-width:0;
+}
 .next{
- font-size:2vw;font-weight:800;background:white;color:#082743;
- padding:.7vh .9vw;border-radius:.4vw;white-space:nowrap
+ background:white;color:#062743;
+ border-radius:8px;
+ padding:.65vh 2vw;
+ font-size:clamp(23px,5.5vw,53px);
+ font-weight:900;
+ white-space:nowrap;
 }
-.following{font-size:1.25vw;font-weight:600;white-space:nowrap}
-.tracking{
- padding:1vh 1.3vw;background:#092b46;
- border-top:1px solid #ffffff20;
- font-size:.95vw;color:#c3d8e9
+.following{
+ font-size:clamp(13px,2.6vw,25px);
+ font-weight:700;
+ color:#c9e9ff;
+ overflow-wrap:anywhere;
 }
+.small-label{
+ font-size:clamp(9px,1.5vw,15px);
+ color:#a9d6f0;
+}
+
+.bottom{
+ flex:0 0 13%;
+ display:grid;
+ grid-template-columns:1fr auto;
+ gap:2vw;
+ min-height:0;
+ border-top:2px solid #ffffff40;
+ padding-top:.8vh;
+}
+.ferry-info{
+ display:flex;align-items:center;
+ min-width:0;gap:2vw;
+}
+.ferry-photo{
+ height:85%;max-width:38%;
+ object-fit:cover;
+ border-radius:8px;
+}
+.ferry-text strong{
+ display:block;
+ font-size:clamp(13px,2.5vw,23px);
+ margin-bottom:.6vh;
+}
+.ferry-text span{
+ display:block;
+ font-size:clamp(10px,1.8vw,17px);
+ color:#c5ddeb;
+ line-height:1.4;
+}
+.qr-box{
+ display:flex;flex-direction:column;
+ justify-content:center;align-items:center;
+ gap:.4vh;
+}
+.qr-box img{
+ height:min(10vh,19vw);
+ width:min(10vh,19vw);
+ background:white;
+ padding:4px;border-radius:5px;
+}
+.qr-label{
+ font-size:clamp(10px,1.7vw,16px);
+ font-weight:800;text-align:center;
+}
+
 .footer{
- height:8vh;flex-shrink:0;display:grid;
- grid-template-columns:1fr 2fr 1fr;
- align-items:center;padding:0 2.5vw;
- background:#00000040;border-top:2px solid #ffffff20
+ flex:0 0 4%;
+ display:flex;justify-content:space-between;
+ align-items:center;
+ border-top:1px solid #ffffff35;
+ font-size:clamp(9px,1.6vw,15px);
+ color:#d1e6f5;
 }
-.source{font-size:1vw;font-weight:700}
-.dot{
- display:inline-block;width:.65vw;height:.65vw;
- background:#41df7c;border-radius:50%;margin-right:.5vw
+.warning{
+ color:#ffd58a;
 }
-.alert{text-align:center;font-size:.95vw}
-.updated{text-align:right;font-size:.9vw;opacity:.8}
+@media (orientation:landscape){
+ .board{gap:.6vh;padding:1vh 2vw}
+ .header{flex-basis:12%}
+ .map-section{flex-basis:25%}
+ .bottom{flex-basis:13%}
+ .footer{flex-basis:5%}
+}
 </style>
 </head>
 <body>
 <div class="board">
 
 <header class="header">
- <div class="title-area">
-  <div class="ferry-icon">⛴️</div>
-  <div>
-   <div class="title">HALIFAX HARBOUR FERRIES</div>
-   <div class="subtitle">DEPARTURES & HARBOUR INFORMATION</div>
-  </div>
+ <div>
+  <div class="heading">⛴ HALIFAX HARBOUR FERRIES</div>
+  <div class="subtitle">SCHEDULED DEPARTURES</div>
  </div>
  <div class="clock">
   <div class="time" id="clock">--:--</div>
-  <div class="date" id="date">Loading...</div>
+  <div class="date" id="date"></div>
  </div>
 </header>
 
-<main class="content">
-
- <div class="left">
-  <section class="panel map-panel">
-   <div class="panel-heading">HALIFAX HARBOUR MAP</div>
-   <div class="map-wrap">
-    <img src="ferry%20route.jpg" alt="Halifax Harbour ferry route map">
-    <div class="map-label" id="map-status">
-     GPS ferry tracking: Not yet connected
-    </div>
-   </div>
-  </section>
-
-  <section class="panel photo-panel">
-   <img
-    src="Halifax-Transit-Harbour-Ferry-Vincent-Coleman-2217923387.jpg"
-    alt="Halifax Transit Vincent Coleman ferry">
-   <div class="photo-caption">
-    <strong>VINCENT COLEMAN</strong>
-    <span>Halifax Transit harbour ferry</span>
-    <span>Connecting communities across Halifax Harbour</span>
-   </div>
-  </section>
+<section class="map-section">
+ <div class="section-title">HALIFAX HARBOUR MAP</div>
+ <div class="map">
+  <img src="ferry%20route.jpg" alt="Halifax Harbour ferry map">
+  <div class="map-note">Ferry GPS positions not yet connected</div>
  </div>
+</section>
 
- <div class="right">
+<main class="schedules">
 
-  <section class="panel route-panel">
-   <div class="panel-heading">ALDERNEY FERRY</div>
-   <div class="route-subtitle">Downtown Halifax ↔ Downtown Dartmouth</div>
+ <section class="route">
+  <div class="route-heading">ALDERNEY FERRY</div>
 
-   <div class="direction">
-    <div class="direction-title">HALIFAX → ALDERNEY LANDING</div>
-    <div class="departures">
-     <div class="next" id="ha1">--:--</div>
-     <div class="following" id="ha2">--:-- • --:--</div>
-    </div>
+  <div class="direction">
+   <div class="direction-name">HALIFAX → ALDERNEY</div>
+   <div class="small-label">NEXT DEPARTURE / FOLLOWING DEPARTURES</div>
+   <div class="times">
+    <div class="next" id="ha1">--:--</div>
+    <div class="following" id="ha2">Loading...</div>
    </div>
-
-   <div class="direction">
-    <div class="direction-title">ALDERNEY LANDING → HALIFAX</div>
-    <div class="departures">
-     <div class="next" id="ah1">--:--</div>
-     <div class="following" id="ah2">--:-- • --:--</div>
-    </div>
-   </div>
-  </section>
-
-  <section class="panel route-panel">
-   <div class="panel-heading">WOODSIDE FERRY</div>
-   <div class="route-subtitle">Downtown Halifax ↔ Woodside</div>
-
-   <div class="direction">
-    <div class="direction-title">HALIFAX → WOODSIDE</div>
-    <div class="departures">
-     <div class="next" id="hw1">--:--</div>
-     <div class="following" id="hw2">--:-- • --:--</div>
-    </div>
-   </div>
-
-   <div class="direction">
-    <div class="direction-title">WOODSIDE → HALIFAX</div>
-    <div class="departures">
-     <div class="next" id="wh1">--:--</div>
-     <div class="following" id="wh2">--:-- • --:--</div>
-    </div>
-   </div>
-  </section>
-
-  <div class="tracking" id="tracking-status">
-   Ferry GPS tracking: Awaiting live position feed
   </div>
 
- </div>
+  <div class="direction">
+   <div class="direction-name">ALDERNEY → HALIFAX</div>
+   <div class="small-label">NEXT DEPARTURE / FOLLOWING DEPARTURES</div>
+   <div class="times">
+    <div class="next" id="ah1">--:--</div>
+    <div class="following" id="ah2">Loading...</div>
+   </div>
+  </div>
+ </section>
+
+ <section class="route">
+  <div class="route-heading">WOODSIDE FERRY</div>
+
+  <div class="direction">
+   <div class="direction-name">HALIFAX → WOODSIDE</div>
+   <div class="small-label">NEXT DEPARTURE / FOLLOWING DEPARTURES</div>
+   <div class="times">
+    <div class="next" id="hw1">--:--</div>
+    <div class="following" id="hw2">Loading...</div>
+   </div>
+  </div>
+
+  <div class="direction">
+   <div class="direction-name">WOODSIDE → HALIFAX</div>
+   <div class="small-label">NEXT DEPARTURE / FOLLOWING DEPARTURES</div>
+   <div class="times">
+    <div class="next" id="wh1">--:--</div>
+    <div class="following" id="wh2">Loading...</div>
+   </div>
+  </div>
+ </section>
+
 </main>
 
+<section class="bottom">
+ <div class="ferry-info">
+  <img class="ferry-photo"
+   src="Halifax-Transit-Harbour-Ferry-Vincent-Coleman-2217923387.jpg"
+   alt="Vincent Coleman ferry">
+  <div class="ferry-text">
+   <strong>VINCENT COLEMAN</strong>
+   <span>Halifax Transit Harbour Ferry</span>
+   <span id="status">Loading schedule...</span>
+   <span>Scheduled times, not live GPS</span>
+  </div>
+ </div>
+
+ <div class="qr-box">
+  <img
+   src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;data=https%3A%2F%2Fmainline123.github.io%2FHalifax-Ferry-Board%2Fmobile.html"
+   alt="QR code for mobile ferry schedule">
+  <div class="qr-label">SCAN FOR<br>CURRENT SCHEDULE</div>
+ </div>
+</section>
+
 <footer class="footer">
- <div class="source"><span class="dot"></span>HALIFAX TRANSIT SCHEDULE</div>
- <div class="alert" id="alert">
-  ⛴ Scheduled times — check service alerts before travelling
- </div>
- <div class="updated">
-  LAST UPDATED: <span id="updated">--:--</span>
- </div>
+ <div>HALIFAX TRANSIT GTFS</div>
+ <div>UPDATED: <span id="updated">--:--</span></div>
 </footer>
 
 </div>
 
 <script>
+const TZ="America/Halifax";
+let ferryData=null;
+let lastFetchFailed=false;
+
+function halifaxParts(date){
+ const parts=new Intl.DateTimeFormat("en-US",{
+  timeZone:TZ,
+  year:"numeric",month:"2-digit",day:"2-digit",
+  hour:"2-digit",minute:"2-digit",hourCycle:"h23"
+ }).formatToParts(date);
+ const result={};
+ parts.forEach(p=>result[p.type]=p.value);
+ return result;
+}
+
 function updateClock(){
  const now=new Date();
  document.getElementById("clock").textContent=
   now.toLocaleTimeString("en-CA",{
-   timeZone:"America/Halifax",hour:"numeric",minute:"2-digit"
+   timeZone:TZ,hour:"numeric",minute:"2-digit"
   });
  document.getElementById("date").textContent=
   now.toLocaleDateString("en-CA",{
-   timeZone:"America/Halifax",
-   weekday:"long",month:"long",day:"numeric"
+   timeZone:TZ,weekday:"short",month:"short",day:"numeric"
   });
+ renderSchedule();
 }
 
-function displayDepartures(times,firstId,followingId){
- const departures=Array.isArray(times)?times:[];
- document.getElementById(firstId).textContent=departures[0]||"—";
- document.getElementById(followingId).textContent=
-  departures.length>1
-   ?departures.slice(1,3).join("  •  ")
-   :"No further departures";
+function minutesOfTime(value){
+ if(typeof value!=="string")return null;
+ const match=value.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+ if(!match)return null;
+ let h=Number(match[1]);
+ const m=Number(match[2]);
+ if(h<1||h>12||m>59)return null;
+ h=h%12+(match[3].toUpperCase()==="PM"?12:0);
+ return h*60+m;
+}
+
+function scheduleAgeMinutes(updated){
+ const updatedMinutes=minutesOfTime(updated);
+ if(updatedMinutes===null)return Infinity;
+ const p=halifaxParts(new Date());
+ const current=Number(p.hour)*60+Number(p.minute);
+ let age=current-updatedMinutes;
+ if(age<0)age+=1440;
+ return age;
+}
+
+function showRoute(times,firstId,followingId,age){
+ const first=document.getElementById(firstId);
+ const following=document.getElementById(followingId);
+
+ if(age>45){
+  first.textContent="—";
+  following.textContent="Schedule update overdue";
+  return;
+ }
+
+ const p=halifaxParts(new Date());
+ const current=Number(p.hour)*60+Number(p.minute);
+
+ const valid=(Array.isArray(times)?times:[])
+  .filter(t=>{
+   const minute=minutesOfTime(t);
+   if(minute===null)return false;
+   // Include near-midnight departures from the next day.
+   let difference=minute-current;
+   if(difference<0)difference+=1440;
+   return difference<=180 &&
+    (minute>=current || (current>=1260 && minute<=180));
+  });
+
+ first.textContent=valid[0]||"—";
+ following.textContent=valid.length>1
+  ?valid.slice(1,3).join("  •  ")
+  :"No further departures listed";
+}
+
+function renderSchedule(){
+ if(!ferryData)return;
+
+ const age=scheduleAgeMinutes(ferryData.updated);
+ const stale=age>45;
+
+ showRoute(ferryData.halifax_alderney,"ha1","ha2",age);
+ showRoute(ferryData.alderney_halifax,"ah1","ah2",age);
+ showRoute(ferryData.halifax_woodside,"hw1","hw2",age);
+ showRoute(ferryData.woodside_halifax,"wh1","wh2",age);
+
+ const status=document.getElementById("status");
+ status.classList.toggle("warning",stale||lastFetchFailed);
+
+ status.textContent=stale
+  ?"Schedule update overdue — verify with Halifax Transit"
+  :lastFetchFailed
+   ?"Connection issue — showing last downloaded schedule"
+   :"Schedule data received";
+
+ document.getElementById("updated").textContent=
+  ferryData.updated||"Unknown";
 }
 
 async function loadFerryData(){
@@ -232,28 +392,29 @@ async function loadFerryData(){
   if(!response.ok)throw new Error("Schedule unavailable");
 
   const data=await response.json();
-
-  displayDepartures(data.halifax_alderney,"ha1","ha2");
-  displayDepartures(data.alderney_halifax,"ah1","ah2");
-  displayDepartures(data.halifax_woodside,"hw1","hw2");
-  displayDepartures(data.woodside_halifax,"wh1","wh2");
-
-  document.getElementById("updated").textContent=
-   data.updated||"--:--";
-
-  document.getElementById("alert").textContent=
-   "⛴ Scheduled departures — check Halifax Transit for service alerts";
+  ferryData=data;
+  lastFetchFailed=false;
+  renderSchedule();
 
  }catch(error){
-  console.error("Ferry schedule error:",error);
-  document.getElementById("alert").textContent=
-   "⚠ Ferry schedule temporarily unavailable";
+  lastFetchFailed=true;
+  if(ferryData){
+   renderSchedule();
+  }else{
+   document.getElementById("status").textContent=
+    "Schedule unavailable — check Halifax Transit";
+   ["ha1","ah1","hw1","wh1"].forEach(id=>{
+    document.getElementById(id).textContent="—";
+   });
+   ["ha2","ah2","hw2","wh2"].forEach(id=>{
+    document.getElementById(id).textContent="No data";
+   });
+  }
  }
 }
 
 updateClock();
 setInterval(updateClock,1000);
-
 loadFerryData();
 setInterval(loadFerryData,60000);
 </script>
