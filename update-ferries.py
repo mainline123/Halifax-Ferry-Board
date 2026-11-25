@@ -9,214 +9,218 @@ from zoneinfo import ZoneInfo
 
 GTFS_URL = "https://gtfs.halifax.ca/static/google_transit.zip"
 OUTPUT_FILE = "ferries.json"
-
 HALIFAX_TZ = ZoneInfo("America/Halifax")
 
-# Halifax ferry stops
 HALIFAX = "1073"
 ALDERNEY = "1074"
 WOODSIDE = "1075"
 
-# Halifax Transit ferry routes
 ALDERNEY_ROUTE = "FerD"
 WOODSIDE_ROUTE = "FerW"
 
-
-def download_gtfs():
-    print("Downloading Halifax Transit GTFS...")
-    with urllib.request.urlopen(GTFS_URL, timeout=30) as response:
-        return response.read()
+DIRECTIONS = (
+    "halifax_alderney",
+    "alderney_halifax",
+    "halifax_woodside",
+    "woodside_halifax"
+)
 
 
 def read_csv_from_zip(zf, filename):
+    if filename not in zf.namelist():
+        return []
+
     with zf.open(filename) as f:
-        text = io.TextIOWrapper(f, encoding="utf-8-sig")
-        return list(csv.DictReader(text))
+        return list(csv.DictReader(
+            io.TextIOWrapper(f, encoding="utf-8-sig")
+        ))
 
 
-def gtfs_time_to_datetime(service_date, time_string):
-    hours, minutes, seconds = map(int, time_string.split(":"))
+def active_service_ids(calendar_rows, exceptions, service_date):
+    day = service_date.strftime("%Y%m%d")
+    weekday = service_date.strftime("%A").lower()
 
-    day_offset = hours // 24
-    hours = hours % 24
+    active = {
+        row["service_id"]
+        for row in calendar_rows
+        if row["start_date"] <= day <= row["end_date"]
+        and row.get(weekday) == "1"
+    }
 
-    dt = datetime(
-        service_date.year,
-        service_date.month,
-        service_date.day,
-        hours,
-        minutes,
-        seconds,
-        tzinfo=HALIFAX_TZ
-    )
-
-    return dt + timedelta(days=day_offset)
-
-
-def active_service_ids(calendar_rows, calendar_dates_rows, today):
-    weekday = today.strftime("%A").lower()
-    date_text = today.strftime("%Y%m%d")
-
-    active = set()
-
-    for row in calendar_rows:
-        start = row["start_date"]
-        end = row["end_date"]
-
-        if start <= date_text <= end and row.get(weekday) == "1":
-            active.add(row["service_id"])
-
-    for row in calendar_dates_rows:
-        if row["date"] != date_text:
-            continue
-
-        if row["exception_type"] == "1":
-            active.add(row["service_id"])
-
-        elif row["exception_type"] == "2":
-            active.discard(row["service_id"])
+    for row in exceptions:
+        if row["date"] == day:
+            if row["exception_type"] == "1":
+                active.add(row["service_id"])
+            elif row["exception_type"] == "2":
+                active.discard(row["service_id"])
 
     return active
 
 
+def gtfs_datetime(service_date, value):
+    hours, minutes, seconds = map(int, value.split(":"))
+
+    midnight = datetime(
+        service_date.year,
+        service_date.month,
+        service_date.day,
+        tzinfo=HALIFAX_TZ
+    )
+
+    return midnight + timedelta(
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds
+    )
+
+
 def main():
     now = datetime.now(HALIFAX_TZ)
-    today = now.date()
 
-    data = download_gtfs()
+    req = urllib.request.Request(
+        GTFS_URL,
+        headers={"User-Agent": "HalifaxFerryBoard/1.0"}
+    )
 
-    with zipfile.ZipFile(io.BytesIO(data)) as zf:
+    with urllib.request.urlopen(req, timeout=45) as response:
+        raw = response.read()
 
+    with zipfile.ZipFile(io.BytesIO(raw)) as zf:
         routes = read_csv_from_zip(zf, "routes.txt")
         trips = read_csv_from_zip(zf, "trips.txt")
         stop_times = read_csv_from_zip(zf, "stop_times.txt")
+        calendar = read_csv_from_zip(zf, "calendar.txt")
+        exceptions = read_csv_from_zip(zf, "calendar_dates.txt")
 
-        calendar = (
-            read_csv_from_zip(zf, "calendar.txt")
-            if "calendar.txt" in zf.namelist()
-            else []
+    ferry_routes = {}
+
+    for row in routes:
+        if row.get("route_short_name") in (
+            ALDERNEY_ROUTE,
+            WOODSIDE_ROUTE
+        ):
+            ferry_routes[row["route_id"]] = row["route_short_name"]
+
+    if set(ferry_routes.values()) != {
+        ALDERNEY_ROUTE,
+        WOODSIDE_ROUTE
+    }:
+        raise RuntimeError(
+            "Expected both ferry routes in GTFS"
         )
 
-        calendar_dates = (
-            read_csv_from_zip(zf, "calendar_dates.txt")
-            if "calendar_dates.txt" in zf.namelist()
-            else []
+    trips_by_id = {
+        row["trip_id"]: (
+            row["service_id"],
+            ferry_routes[row["route_id"]]
         )
-
-    ferry_route_ids = {}
-
-    for route in routes:
-        short_name = route.get("route_short_name", "")
-
-        if short_name in (ALDERNEY_ROUTE, WOODSIDE_ROUTE):
-            ferry_route_ids[short_name] = route["route_id"]
-
-    print("Ferry routes found:", ferry_route_ids)
-
-    active_services = active_service_ids(
-        calendar,
-        calendar_dates,
-        today
-    )
-
-    ferry_trips = {}
-
-    for trip in trips:
-        if trip["service_id"] not in active_services:
-            continue
-
-        route_id = trip["route_id"]
-
-        if route_id == ferry_route_ids.get(ALDERNEY_ROUTE):
-            ferry_trips[trip["trip_id"]] = ALDERNEY_ROUTE
-
-        elif route_id == ferry_route_ids.get(WOODSIDE_ROUTE):
-            ferry_trips[trip["trip_id"]] = WOODSIDE_ROUTE
-
-    trip_stops = {}
-
-    for row in stop_times:
-        trip_id = row["trip_id"]
-
-        if trip_id not in ferry_trips:
-            continue
-
-        trip_stops.setdefault(trip_id, []).append(row)
-
-    departures = {
-        "halifax_alderney": [],
-        "alderney_halifax": [],
-        "halifax_woodside": [],
-        "woodside_halifax": []
+        for row in trips
+        if row["route_id"] in ferry_routes
     }
 
-    for trip_id, stops in trip_stops.items():
+    stops_by_trip = {}
 
-        stops.sort(key=lambda x: int(x["stop_sequence"]))
+    for row in stop_times:
+        if row["trip_id"] in trips_by_id:
+            stops_by_trip.setdefault(
+                row["trip_id"], []
+            ).append(row)
 
-        route = ferry_trips[trip_id]
+    departures = {
+        key: [] for key in DIRECTIONS
+    }
 
-        stop_ids = [s["stop_id"] for s in stops]
+    # Include yesterday for trips after midnight.
+    # Check today and the next two days.
+    for day_offset in (-1, 0, 1, 2):
+        service_date = now.date() + timedelta(
+            days=day_offset
+        )
 
-        if route == ALDERNEY_ROUTE:
+        active = active_service_ids(
+            calendar,
+            exceptions,
+            service_date
+        )
 
-            if HALIFAX in stop_ids and ALDERNEY in stop_ids:
+        for trip_id, (service_id, route) in trips_by_id.items():
+            if service_id not in active:
+                continue
 
-                h_index = stop_ids.index(HALIFAX)
-                a_index = stop_ids.index(ALDERNEY)
+            stops = sorted(
+                stops_by_trip.get(trip_id, []),
+                key=lambda row: int(row["stop_sequence"])
+            )
 
-                if h_index < a_index:
-                    departure_stop = stops[h_index]
-                    key = "halifax_alderney"
-                else:
-                    departure_stop = stops[a_index]
-                    key = "alderney_halifax"
+            stop_ids = [
+                row["stop_id"] for row in stops
+            ]
 
-                departure_time = gtfs_time_to_datetime(
-                    today,
-                    departure_stop["departure_time"]
+            destination = (
+                ALDERNEY
+                if route == ALDERNEY_ROUTE
+                else WOODSIDE
+            )
+
+            if (
+                HALIFAX not in stop_ids
+                or destination not in stop_ids
+            ):
+                continue
+
+            h_index = stop_ids.index(HALIFAX)
+            d_index = stop_ids.index(destination)
+
+            if h_index < d_index:
+                key = (
+                    "halifax_alderney"
+                    if route == ALDERNEY_ROUTE
+                    else "halifax_woodside"
                 )
-
-                if departure_time >= now:
-                    departures[key].append(departure_time)
-
-        elif route == WOODSIDE_ROUTE:
-
-            if HALIFAX in stop_ids and WOODSIDE in stop_ids:
-
-                h_index = stop_ids.index(HALIFAX)
-                w_index = stop_ids.index(WOODSIDE)
-
-                if h_index < w_index:
-                    departure_stop = stops[h_index]
-                    key = "halifax_woodside"
-                else:
-                    departure_stop = stops[w_index]
-                    key = "woodside_halifax"
-
-                departure_time = gtfs_time_to_datetime(
-                    today,
-                    departure_stop["departure_time"]
+                origin = stops[h_index]
+            else:
+                key = (
+                    "alderney_halifax"
+                    if route == ALDERNEY_ROUTE
+                    else "woodside_halifax"
                 )
+                origin = stops[d_index]
 
-                if departure_time >= now:
-                    departures[key].append(departure_time)
+            dt = gtfs_datetime(
+                service_date,
+                origin["departure_time"]
+            )
+
+            if dt >= now:
+                departures[key].append(dt)
 
     output = {}
 
-    for key, times in departures.items():
-
-        times.sort()
+    for key in DIRECTIONS:
+        times = sorted(set(departures[key]))[:3]
 
         output[key] = [
             t.strftime("%-I:%M %p")
-            for t in times[:3]
+            for t in times
+        ]
+
+        output[key + "_iso"] = [
+            t.isoformat()
+            for t in times
         ]
 
     output["updated"] = now.strftime("%-I:%M %p")
-    output["source"] = "Halifax Transit GTFS"
+    output["updated_iso"] = now.isoformat()
+    output["source"] = (
+        "Halifax Transit GTFS "
+        "(scheduled, not live departures)"
+    )
 
-    with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
+    with open(
+        OUTPUT_FILE,
+        "w",
+        encoding="utf-8"
+    ) as f:
         json.dump(output, f, indent=2)
 
     print(json.dumps(output, indent=2))
