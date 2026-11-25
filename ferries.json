@@ -1,22 +1,15 @@
 {
   "halifax_alderney": [
-    "8:15 PM",
-    "8:45 PM",
-    "9:15 PM"
+    "10:45 PM",
+    "11:15 PM",
+    "11:45 PM"
   ],
   "alderney_halifax": [
-    "8:30 PM",
-    "9:00 PM",
-    "9:30 PM"
+    "11:00 PM",
+    "11:30 PM"
   ],
-  "halifax_woodside": [
-    "8:22 PM",
-    "8:52 PM"
-  ],
-  "woodside_halifax": [
-    "8:07 PM",
-    "8:37 PM"
-  ],
-  "updated": "8:04 PM",
+  "halifax_woodside": [],
+  "woodside_halifax": [],
+  "updated": "10:36 PM",
   "source": "Halifax Transit GTFS"
 }
