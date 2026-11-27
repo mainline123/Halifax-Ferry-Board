@@ -1,45 +1,13 @@
 {
-  "halifax_alderney": [
-    "3:45 PM",
-    "4:00 PM",
-    "4:15 PM"
-  ],
-  "halifax_alderney_iso": [
-    "2026-11-27T15:45:00-04:00",
-    "2026-11-27T16:00:00-04:00",
-    "2026-11-27T16:15:00-04:00"
-  ],
-  "alderney_halifax": [
-    "3:45 PM",
-    "4:00 PM",
-    "4:15 PM"
-  ],
-  "alderney_halifax_iso": [
-    "2026-11-27T15:45:00-04:00",
-    "2026-11-27T16:00:00-04:00",
-    "2026-11-27T16:15:00-04:00"
-  ],
-  "halifax_woodside": [
-    "3:37 PM",
-    "3:52 PM",
-    "4:07 PM"
-  ],
-  "halifax_woodside_iso": [
-    "2026-11-27T15:37:00-04:00",
-    "2026-11-27T15:52:00-04:00",
-    "2026-11-27T16:07:00-04:00"
-  ],
-  "woodside_halifax": [
-    "3:37 PM",
-    "3:52 PM",
-    "4:07 PM"
-  ],
-  "woodside_halifax_iso": [
-    "2026-11-27T15:37:00-04:00",
-    "2026-11-27T15:52:00-04:00",
-    "2026-11-27T16:07:00-04:00"
-  ],
-  "updated": "3:30 PM",
-  "updated_iso": "2026-11-27T15:30:17.259063-04:00",
+  "halifax_alderney": [],
+  "halifax_alderney_iso": [],
+  "alderney_halifax": [],
+  "alderney_halifax_iso": [],
+  "halifax_woodside": [],
+  "halifax_woodside_iso": [],
+  "woodside_halifax": [],
+  "woodside_halifax_iso": [],
+  "updated": "3:45 PM",
+  "updated_iso": "2026-11-27T15:45:13.393927-04:00",
   "source": "Halifax Transit GTFS (scheduled, not live departures)"
 }
