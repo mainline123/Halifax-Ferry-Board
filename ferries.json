@@ -1,13 +1,13 @@
 {
   "halifax_alderney": [
-    "11:45 PM",
     "6:45 AM",
-    "7:15 AM"
+    "7:15 AM",
+    "7:45 AM"
   ],
   "halifax_alderney_iso": [
-    "2026-11-27T23:45:00-04:00",
     "2026-11-28T06:45:00-04:00",
-    "2026-11-28T07:15:00-04:00"
+    "2026-11-28T07:15:00-04:00",
+    "2026-11-28T07:45:00-04:00"
   ],
   "alderney_halifax": [
     "6:30 AM",
@@ -23,7 +23,7 @@
   "halifax_woodside_iso": [],
   "woodside_halifax": [],
   "woodside_halifax_iso": [],
-  "updated": "11:30 PM",
-  "updated_iso": "2026-11-27T23:30:17.368157-04:00",
+  "updated": "11:45 PM",
+  "updated_iso": "2026-11-27T23:45:14.646087-04:00",
   "source": "Halifax Transit published schedules (fallback, not live departures)"
 }
