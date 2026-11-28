@@ -4,7 +4,9 @@ import io
 import json
 import zipfile
 import urllib.request
+from collections import Counter
 from datetime import datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 GTFS_URL = "https://gtfs.halifax.ca/static/google_transit.zip"
@@ -14,7 +16,6 @@ HALIFAX_TZ = ZoneInfo("America/Halifax")
 HALIFAX = "1073"
 ALDERNEY = "1074"
 WOODSIDE = "1075"
-
 ALDERNEY_ROUTE = "FerD"
 WOODSIDE_ROUTE = "FerW"
 
@@ -28,6 +29,7 @@ DIRECTIONS = (
 
 def read_csv_from_zip(zf, filename):
     if filename not in zf.namelist():
+        print(f"DIAGNOSTIC: {filename} missing from GTFS archive")
         return []
 
     with zf.open(filename) as f:
@@ -77,6 +79,8 @@ def gtfs_datetime(service_date, value):
 def main():
     now = datetime.now(HALIFAX_TZ)
 
+    print(f"DIAGNOSTIC: Halifax local time: {now.isoformat()}")
+
     req = urllib.request.Request(
         GTFS_URL,
         headers={"User-Agent": "HalifaxFerryBoard/1.0"}
@@ -85,28 +89,88 @@ def main():
     with urllib.request.urlopen(req, timeout=45) as response:
         raw = response.read()
 
+    print(
+        f"DIAGNOSTIC: Downloaded GTFS archive ({len(raw)} bytes)"
+    )
+
     with zipfile.ZipFile(io.BytesIO(raw)) as zf:
         routes = read_csv_from_zip(zf, "routes.txt")
         trips = read_csv_from_zip(zf, "trips.txt")
         stop_times = read_csv_from_zip(zf, "stop_times.txt")
         calendar = read_csv_from_zip(zf, "calendar.txt")
         exceptions = read_csv_from_zip(zf, "calendar_dates.txt")
+        stops = read_csv_from_zip(zf, "stops.txt")
 
-    ferry_routes = {}
+    print("DIAGNOSTIC: Row counts:", json.dumps({
+        "routes": len(routes),
+        "trips": len(trips),
+        "stop_times": len(stop_times),
+        "calendar": len(calendar),
+        "calendar_dates": len(exceptions),
+        "stops": len(stops)
+    }))
 
-    for row in routes:
-        if row.get("route_short_name") in (
+    ferry_candidates = [
+        r for r in routes
+        if "fer" in (
+            r.get("route_short_name", "") + " " +
+            r.get("route_long_name", "")
+        ).lower()
+        or r.get("route_type") == "4"
+    ]
+
+    print("DIAGNOSTIC: Ferry route candidates:", json.dumps([
+        {
+            k: r.get(k)
+            for k in (
+                "route_id",
+                "route_short_name",
+                "route_long_name",
+                "route_type"
+            )
+        }
+        for r in ferry_candidates[:30]
+    ]))
+
+    print("DIAGNOSTIC: Configured terminal IDs:", json.dumps({
+        "Halifax": HALIFAX,
+        "Alderney": ALDERNEY,
+        "Woodside": WOODSIDE
+    }))
+
+    print("DIAGNOSTIC: Terminal stop candidates:", json.dumps([
+        {
+            k: s.get(k)
+            for k in ("stop_id", "stop_name", "parent_station")
+        }
+        for s in stops
+        if any(
+            x in s.get("stop_name", "").lower()
+            for x in ("ferry", "alderney", "woodside")
+        )
+    ][:40]))
+
+    ferry_routes = {
+        r["route_id"]: r["route_short_name"]
+        for r in routes
+        if r.get("route_short_name") in (
             ALDERNEY_ROUTE,
             WOODSIDE_ROUTE
-        ):
-            ferry_routes[row["route_id"]] = row["route_short_name"]
+        )
+    }
+
+    print(
+        "DIAGNOSTIC: Matched configured ferry routes:",
+        json.dumps(ferry_routes)
+    )
 
     if set(ferry_routes.values()) != {
         ALDERNEY_ROUTE,
         WOODSIDE_ROUTE
     }:
         raise RuntimeError(
-            "Expected both ferry routes in GTFS"
+            "Expected both ferry routes in GTFS; "
+            "see route diagnostics above"
         )
 
     trips_by_id = {
@@ -126,12 +190,29 @@ def main():
                 row["trip_id"], []
             ).append(row)
 
+    print(
+        f"DIAGNOSTIC: Ferry trips found: {len(trips_by_id)}; "
+        f"with stop times: {len(stops_by_trip)}"
+    )
+
+    print(
+        "DIAGNOSTIC: Stop IDs used by ferry trips:",
+        json.dumps(
+            Counter(
+                s["stop_id"]
+                for rows in stops_by_trip.values()
+                for s in rows
+            ).most_common(25)
+        )
+    )
+
     departures = {
         key: [] for key in DIRECTIONS
     }
 
-    # Include yesterday for trips after midnight.
-    # Check today and the next two days.
+    active_trip_count = 0
+    matched_terminal_trip_count = 0
+
     for day_offset in (-1, 0, 1, 2):
         service_date = now.date() + timedelta(
             days=day_offset
@@ -143,17 +224,22 @@ def main():
             service_date
         )
 
+        day_active_trips = 0
+
         for trip_id, (service_id, route) in trips_by_id.items():
             if service_id not in active:
                 continue
 
-            stops = sorted(
+            day_active_trips += 1
+            active_trip_count += 1
+
+            trip_stops = sorted(
                 stops_by_trip.get(trip_id, []),
                 key=lambda row: int(row["stop_sequence"])
             )
 
             stop_ids = [
-                row["stop_id"] for row in stops
+                row["stop_id"] for row in trip_stops
             ]
 
             destination = (
@@ -168,6 +254,8 @@ def main():
             ):
                 continue
 
+            matched_terminal_trip_count += 1
+
             h_index = stop_ids.index(HALIFAX)
             d_index = stop_ids.index(destination)
 
@@ -177,14 +265,14 @@ def main():
                     if route == ALDERNEY_ROUTE
                     else "halifax_woodside"
                 )
-                origin = stops[h_index]
+                origin = trip_stops[h_index]
             else:
                 key = (
                     "alderney_halifax"
                     if route == ALDERNEY_ROUTE
                     else "woodside_halifax"
                 )
-                origin = stops[d_index]
+                origin = trip_stops[d_index]
 
             dt = gtfs_datetime(
                 service_date,
@@ -193,6 +281,26 @@ def main():
 
             if dt >= now:
                 departures[key].append(dt)
+
+        print(
+            f"DIAGNOSTIC: {service_date}: "
+            f"active service IDs={len(active)}, "
+            f"active ferry trips={day_active_trips}"
+        )
+
+    print(
+        "DIAGNOSTIC: Active ferry trips across dates="
+        f"{active_trip_count}; matching configured terminal IDs="
+        f"{matched_terminal_trip_count}"
+    )
+
+    print(
+        "DIAGNOSTIC: Future departure counts:",
+        json.dumps({
+            k: len(v)
+            for k, v in departures.items()
+        })
+    )
 
     output = {}
 
@@ -211,19 +319,25 @@ def main():
 
     output["updated"] = now.strftime("%-I:%M %p")
     output["updated_iso"] = now.isoformat()
+
     output["source"] = (
         "Halifax Transit GTFS "
         "(scheduled, not live departures)"
     )
 
-    with open(
-        OUTPUT_FILE,
-        "w",
-        encoding="utf-8"
-    ) as f:
-        json.dump(output, f, indent=2)
+    if not any(departures.values()):
+        raise RuntimeError(
+            "No upcoming ferry departures found in any direction. "
+            "Existing ferries.json was NOT overwritten. "
+            "Review DIAGNOSTIC lines."
+        )
 
-    print(json.dumps(output, indent=2))
+    Path(OUTPUT_FILE).write_text(
+        json.dumps(output, indent=2) + "\n",
+        encoding="utf-8"
+    )
+
+    print("RESULT:", json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":
